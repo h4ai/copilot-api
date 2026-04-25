@@ -2,7 +2,6 @@
 
 import { defineCommand } from "citty"
 import consola from "consola"
-import { spawn } from "node:child_process"
 
 import { PATHS, ensurePaths } from "./lib/paths"
 import { state } from "./lib/state"
@@ -11,7 +10,6 @@ import { setupGitHubToken } from "./lib/token"
 interface RunAuthOptions {
   verbose: boolean
   showToken: boolean
-  autoStart: boolean
 }
 
 export async function runAuth(options: RunAuthOptions): Promise<void> {
@@ -25,16 +23,6 @@ export async function runAuth(options: RunAuthOptions): Promise<void> {
   await ensurePaths()
   await setupGitHubToken({ force: true })
   consola.success("GitHub token written to", PATHS.GITHUB_TOKEN_PATH)
-
-  if (options.autoStart) {
-    const child = spawn(process.execPath, [process.argv[1], "start"], {
-      detached: true,
-      stdio: "ignore",
-      env: { ...process.env, NODE_ENV: "production" },
-    })
-    child.unref()
-    consola.success("Server started in background (port 4141)")
-  }
 }
 
 export const auth = defineCommand({
@@ -54,17 +42,11 @@ export const auth = defineCommand({
       default: false,
       description: "Show GitHub token on auth",
     },
-    "auto-start": {
-      type: "boolean",
-      default: false,
-      description: "Automatically start the server in background after login",
-    },
   },
   run({ args }) {
     return runAuth({
       verbose: args.verbose,
       showToken: args["show-token"],
-      autoStart: args["auto-start"],
     })
   },
 })

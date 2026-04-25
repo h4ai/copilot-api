@@ -27,11 +27,10 @@
     "knip": "knip-bun",
     "lint": "eslint --cache",
     "lint:all": "eslint --cache .",
-    "login": "NODE_ENV=production bun run ./src/main.ts auth --auto-start",
     "prepack": "bun run build",
     "prepare": "simple-git-hooks",
     "release": "bumpp && bun publish --access public",
-    "start": "NODE_ENV=production bun run ./src/main.ts start",
+    "start": "NODE_ENV=production bun run ./src/main.ts",
     "typecheck": "tsc"
   },
   "simple-git-hooks": {
