@@ -98,15 +98,36 @@ docker run -p 4141:4141 -e GH_TOKEN=your_token copilot-api start --verbose --por
 ### Docker Compose Example
 
 ```yaml
-version: "3.8"
 services:
   copilot-api:
-    build: .
+    image: copilot-api:local
+    container_name: copilot-api-local
+    restart: unless-stopped
     ports:
       - "4141:4141"
     environment:
-      - GH_TOKEN=your_github_token_here
-    restart: unless-stopped
+      # Optional: set your GitHub token to skip interactive auth
+      GH_TOKEN: ${GH_TOKEN:-}
+      # Host proxy for Docker Desktop on macOS
+      HTTP_PROXY: http://host.docker.internal:7890
+      HTTPS_PROXY: http://host.docker.internal:7890
+      ALL_PROXY: http://host.docker.internal:7890
+      NO_PROXY: localhost,127.0.0.1,::1,host.docker.internal
+    volumes:
+      - /Users/hongfushi/docker/copilot-api:/root/.local/share/copilot-api
+```
+
+Run with Docker Compose:
+
+```sh
+# Build local image first (if you don't already have copilot-api:local)
+docker build -t copilot-api:local .
+
+# Start service in background
+docker compose up -d
+
+# View logs
+docker compose logs -f
 ```
 
 The Docker image includes:
