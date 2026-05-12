@@ -24,10 +24,20 @@ export async function forwardError(c: Context, error: unknown) {
       errorJson = errorText
     }
     consola.error("HTTP error:", errorJson)
+
+    const upstreamError =
+      typeof errorJson === "object" && errorJson !== null ?
+        (errorJson as { error?: { message?: string; code?: string } }).error
+      : undefined
+
+    const message = upstreamError?.message ?? errorText
+    const code = upstreamError?.code
+
     return c.json(
       {
         error: {
-          message: errorText,
+          message,
+          ...(code ? { code } : {}),
           type: "error",
         },
       },

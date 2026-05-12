@@ -47,12 +47,6 @@ export function translateToOpenAI(
 }
 
 function translateModelName(model: string): string {
-  // Subagent requests use a specific model number which Copilot doesn't support
-  if (model.startsWith("claude-sonnet-4-")) {
-    return model.replace(/^claude-sonnet-4-.*/, "claude-sonnet-4")
-  } else if (model.startsWith("claude-opus-")) {
-    return model.replace(/^claude-opus-4-.*/, "claude-opus-4")
-  }
   return model
 }
 
@@ -234,14 +228,42 @@ function translateAnthropicToolsToOpenAI(
   if (!anthropicTools) {
     return undefined
   }
+
   return anthropicTools.map((tool) => ({
     type: "function",
     function: {
       name: tool.name,
       description: tool.description,
-      parameters: tool.input_schema,
+      parameters: stripJsonSchemaMeta(tool.input_schema),
     },
   }))
+}
+
+function stripJsonSchemaMeta(schema: unknown): Record<string, unknown> {
+  if (!schema || typeof schema !== "object" || Array.isArray(schema)) {
+    return {}
+  }
+
+  const sanitize = (value: unknown): unknown => {
+    if (Array.isArray(value)) {
+      return value.map((item) => sanitize(item))
+    }
+
+    if (value && typeof value === "object") {
+      const result: Record<string, unknown> = {}
+      for (const [key, nestedValue] of Object.entries(value)) {
+        if (key === "$schema") {
+          continue
+        }
+        result[key] = sanitize(nestedValue)
+      }
+      return result
+    }
+
+    return value
+  }
+
+  return sanitize(schema) as Record<string, unknown>
 }
 
 function translateAnthropicToolChoiceToOpenAI(

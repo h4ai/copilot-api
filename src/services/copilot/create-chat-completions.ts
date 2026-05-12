@@ -35,7 +35,19 @@ export const createChatCompletions = async (
   })
 
   if (!response.ok) {
-    consola.error("Failed to create chat completions", response)
+    const responseText = await response.clone().text()
+    let responseBody: unknown = responseText
+    try {
+      responseBody = JSON.parse(responseText)
+    } catch {
+      // Keep raw text when body is not JSON.
+    }
+
+    consola.error("Failed to create chat completions", {
+      status: response.status,
+      statusText: response.statusText,
+      body: responseBody,
+    })
     throw new HTTPError("Failed to create chat completions", response)
   }
 
